@@ -46,7 +46,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
  *
  * TODO: implement. Read the restaurant fields from req.body, insert a row,
  * and return the created restaurant with a 201 status.
- * Note: `rating` currently has no validation anywhere — decide what valid means.
+ * Note: `rating` currently has no validation anywhere - decide what valid means.
  */
 router.post('/', async (_req: Request, res: Response) => {
   res.status(501).json({ error: 'Not implemented' });

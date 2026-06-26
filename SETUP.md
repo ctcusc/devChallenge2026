@@ -5,19 +5,25 @@ minutes.
 
 ## Prerequisites
 
-| Tool       | Version |
-| ---------- | ------- |
-| Node.js    | 18+     |
-| npm        | 9+      |
-| PostgreSQL | 14+     |
+| Tool                    | Version | Notes                                    |
+| ----------------------- | ------- | ---------------------------------------- |
+| Node.js                 | 18+     | Required                                 |
+| npm                     | 9+      | Required                                 |
+| Docker + Docker Compose | 20.10+  | Required - runs PostgreSQL for everyone  |
 
 Check what you have:
 
 ```bash
-node --version    # v18 or newer
-npm --version     # 9 or newer
-psql --version    # 14 or newer
+node --version            # v18 or newer
+npm --version             # 9 or newer
+docker --version          # 20.10 or newer
+docker compose version    # comes with modern Docker Desktop
 ```
+
+We run PostgreSQL through Docker so everyone - and every reviewer - is on the
+exact same database setup. Don't have Docker? Get it from
+[docker.com/get-started](https://www.docker.com/get-started/) (Docker Desktop on
+macOS/Windows includes Compose).
 
 ## 1. Clone
 
@@ -26,19 +32,41 @@ git clone <your-fork-url> feeding-brennen
 cd feeding-brennen
 ```
 
-## 2. Create the database
+## 2. Start the database
 
-Make sure PostgreSQL is running, then create an empty database for the app:
+Everyone runs PostgreSQL the same way: through Docker Compose. It spins up the
+database with the right user, password, and database name already configured, so
+there's nothing to install or create by hand.
 
-```bash
-createdb feeding_brennen
-```
-
-If `createdb` isn't available, do it from inside `psql`:
+From the repo root:
 
 ```bash
-psql -U postgres -c "CREATE DATABASE feeding_brennen;"
+docker compose up -d
 ```
+
+That starts PostgreSQL in the background on `localhost:5432`, pre-configured to
+match the default `DATABASE_URL`. Confirm it's healthy:
+
+```bash
+docker compose ps
+# the `db` service should show "running (healthy)"
+```
+
+Useful commands later:
+
+```bash
+docker compose down       # stop the DB (your data is kept)
+docker compose down -v    # stop the DB and wipe all data (fresh start)
+docker compose logs db     # tail database logs
+```
+
+That's it - no need to create the database by hand; Compose already did.
+
+> **Really can't run Docker?** As a last resort you can install PostgreSQL
+> natively, create a database with `createdb feeding_brennen` (or
+> `psql -U postgres -c "CREATE DATABASE feeding_brennen;"`), and point
+> `DATABASE_URL` at it. This isn't the supported path - reviewers run the Docker
+> setup - so only do this if Docker truly isn't an option for you.
 
 ## 3. Configure environment variables
 
@@ -158,7 +186,10 @@ PostgreSQL is installed but its CLI tools aren't on your `PATH`.
 
 The server can't reach PostgreSQL.
 
-- Make sure the database server is actually running:
+- **Docker:** make sure the container is up and healthy - `docker compose ps`
+  should show the `db` service as `running (healthy)`. If not, `docker compose up
+  -d` and check `docker compose logs db`.
+- **Native:** make sure the database server is actually running:
   - macOS (Homebrew): `brew services start postgresql@16`
   - Linux (systemd): `sudo systemctl start postgresql`
 - Confirm the host and port in `DATABASE_URL` match where Postgres is listening
@@ -192,13 +223,31 @@ Something is already listening on 3000 or 3001.
   `client/.env` plus the `-p` flag in the client `dev` script if you move the
   client.
 
+### Docker: port 5432 already allocated
+
+Another Postgres (often a native install) is already using port 5432, so the
+container can't bind it. Either stop the other one (e.g. `brew services stop
+postgresql@16`), or remap the container in `docker-compose.yml` - change the
+`ports` line to `"5433:5432"` and update the port in `DATABASE_URL` to `5433`.
+
+### Docker: starting over with a clean database
+
+Wipe the container's data and bring it back up empty, then re-migrate and
+re-seed:
+
+```bash
+docker compose down -v
+docker compose up -d
+cd server && npm run migrate && npm run seed
+```
+
 ### Migration errors
 
-- **`relation "restaurants" already exists`** — the tables are already there.
+- **`relation "restaurants" already exists`** - the tables are already there.
   The migrations use `IF NOT EXISTS`, so this is usually safe to ignore. To start
   fresh, drop and recreate the database (`dropdb feeding_brennen && createdb
   feeding_brennen`) and re-run `npm run migrate`.
-- **`DATABASE_URL is not set`** — you haven't created `server/.env` (or it's
+- **`DATABASE_URL is not set`** - you haven't created `server/.env` (or it's
   missing the variable). Revisit step 3.
-- **Anything hanging** — double-check Postgres is running and reachable (see
+- **Anything hanging** - double-check Postgres is running and reachable (see
   "connection refused" above).

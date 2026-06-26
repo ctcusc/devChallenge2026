@@ -1,7 +1,8 @@
+// Load .env as a side effect on import. pool.ts is imported both by the server
+// (via app/routes) and by the standalone migrate/seed scripts, so each of those
+// entry points gets DATABASE_URL without having to wire up dotenv itself.
+import 'dotenv/config';
 import { Pool } from 'pg';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 if (!process.env.DATABASE_URL) {
   // Fail loudly rather than silently connecting to some default database.
