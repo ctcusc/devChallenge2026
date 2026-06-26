@@ -6,8 +6,10 @@ import { pool } from './pool';
  * Tiny migration runner: executes every .sql file in ./migrations in
  * alphabetical order. The migrations use `IF NOT EXISTS`, so re-running is safe.
  *
+ * Run with: npm run migrate
+ *
  * This is deliberately minimal. If you outgrow it, a real migration tool
- * (node-pg-migrate, Knex, Prisma, ...) is fair game.
+ * (node-pg-migrate, Knex, Drizzle, ...) is fair game.
  */
 async function migrate(): Promise<void> {
   const migrationsDir = path.join(__dirname, 'migrations');

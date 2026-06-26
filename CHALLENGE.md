@@ -23,11 +23,20 @@ http://localhost:3000 and see a list of restaurants once the bug below is fixed.
 
 So you know where the floor is:
 
-- Project structure, TypeScript config, and tooling for client and server
+- A single Next.js app that serves both the UI and the REST API (route handlers)
 - PostgreSQL connection pool, a migration, and a seed script
-- `GET /restaurants` and `GET /restaurants/:id`
+- `GET /api/restaurants` and `GET /api/restaurants/:id` (route handlers)
 - A bare Next.js page that lists restaurants
-- Request-logging and error-handling middleware (the error handler is a stub)
+- A shared error helper for the API (`lib/errors.ts`) - currently a stub
+- A Postman collection (`postman/`) that encodes the API contract you build against
+
+## How it's put together
+
+It's **one Next.js app**. The UI lives in `app/` and the REST API lives in route
+handlers under `app/api/` (e.g. `app/api/restaurants/route.ts`). Those handlers
+talk to Postgres through the shared pool in `db/pool.ts`. There is no separate
+backend server and no Server Actions - the frontend reaches data only by calling
+the `/api` endpoints over HTTP, so building real REST endpoints is the whole job.
 
 ## What we want you to build
 
@@ -44,12 +53,13 @@ marked with a `TODO` in the code.
 
 ### Required first: Fix the bug
 
-`GET /restaurants` does not behave correctly. Find out why and fix it. (Hint:
-compare the query in the route to the migration.) Once fixed, `curl
-http://localhost:3001/restaurants` should return `200` with a JSON array of the
-seeded restaurants, and the frontend list at http://localhost:3000 should load.
+`GET /api/restaurants` does not behave correctly. Find out why and fix it. (Hint:
+compare the query in the route handler to the migration.) Once fixed, `curl
+http://localhost:3000/api/restaurants` should return `200` with a JSON array of
+the seeded restaurants, and the frontend list at http://localhost:3000 should
+load.
 
-`server/src/routes/restaurants.ts`, `server/src/db/migrations/001_create_tables.sql`
+`client/app/api/restaurants/route.ts`, `client/db/migrations/001_create_tables.sql`
 
 ---
 
@@ -57,13 +67,14 @@ seeded restaurants, and the frontend list at http://localhost:3000 should load.
 
 ### 2. Finish the Restaurant write API
 
-The write routes are stubbed and return `501`.
+The write handlers are stubbed and return `501`.
 
-`server/src/routes/restaurants.ts`
+`client/app/api/restaurants/route.ts` (POST),
+`client/app/api/restaurants/[id]/route.ts` (PUT, DELETE)
 
-- **`POST /restaurants`** -> insert and return the created restaurant with `201`.
-- **`PUT /restaurants/:id`** -> update and return the record, or `404`.
-- **`DELETE /restaurants/:id`** -> delete and return `204`, or `404`. Decide what
+- **`POST /api/restaurants`** -> insert and return the created restaurant with `201`.
+- **`PUT /api/restaurants/:id`** -> update and return the record, or `404`.
+- **`DELETE /api/restaurants/:id`** -> delete and return `204`, or `404`. Decide what
   happens to that restaurant's visits.
 
 ### 3. Add validation
@@ -71,30 +82,32 @@ The write routes are stubbed and return `501`.
 Nothing validates input today. Most visibly: `rating` accepts **any** number,
 including `6`.
 
-`server/src/routes/restaurants.ts` (and your visit routes)
+`client/app/api/restaurants/` (and your visit handlers)
 
 - Reject out-of-range ratings (decide the range, e.g. `0-5`) with a `400`.
 - Validate required fields and types for restaurants and visits.
 
 ### 4. Build the Visit API from scratch
 
-`Visit` has a model, a table, and seed data, but **no API at all**. There is no
-route file for it.
+`Visit` has a table and seed data, but **no API at all**. There are no route
+handlers for it yet.
 
-create `server/src/routes/visits.ts`, mount it in `server/src/routes/index.ts`
+create `client/app/api/visits/route.ts` (and/or
+`client/app/api/restaurants/[id]/visits/route.ts`)
 
 - Support listing, reading, creating, updating, and deleting visits.
 - Decide on the shape: nested under a restaurant
-  (`GET /restaurants/:id/visits`), a top-level `/visits` resource, or both.
+  (`GET /api/restaurants/:id/visits`), a top-level `/api/visits` resource, or both.
 - A visit for a restaurant that doesn't exist should be rejected (not 500).
 
-### 5. Harden the error handler
+### 5. Harden the error handling
 
-It's a stub that always returns `500`.
+The shared error helper is a stub that always returns `500`.
 
-`server/src/middleware/errorHandler.ts`
+`client/lib/errors.ts`
 
 - Map known error types to appropriate status codes (`400`, `404`, `409`, ...).
+- Call it consistently from your route handlers' `catch` blocks.
 - Don't leak internal error details in responses.
 
 ### 6. Make the frontend real
@@ -108,29 +121,79 @@ The list is a bare server-side fetch with no states.
 - Anything that makes it feel finished: a restaurant detail view, showing a
   restaurant's visits, forms to add data, totals/spend summaries, etc.
 
+## API contract
+
+This is a REST API exercise. Your endpoints are Next.js route handlers under
+`app/api/`. They must speak HTTP and return JSON, and both the frontend and our
+review talk to them only over HTTP at `http://localhost:3000/api` - there is no
+shortcut around building real endpoints (no Server Actions, no direct DB calls
+from the page).
+
+### Restaurants (fixed contract)
+
+| Method and path | Success | Errors |
+| --------------- | ------- | ------ |
+| `GET /api/restaurants` | `200` + JSON array | - |
+| `GET /api/restaurants/:id` | `200` + restaurant | `404` if missing |
+| `POST /api/restaurants` | `201` + created restaurant (with `id`) | `400` on invalid body (missing `name`, `rating` outside 0-5, ...) |
+| `PUT /api/restaurants/:id` | `200` + updated restaurant | `404` if missing, `400` on invalid body |
+| `DELETE /api/restaurants/:id` | `204`, no body | `404` if missing |
+
+Restaurant shape:
+
+```json
+{
+  "id": 1,
+  "name": "The Rusty Spoon",
+  "cuisine": "American",
+  "address": "12 Main St",
+  "rating": 4.5,
+  "createdAt": "2026-01-01T00:00:00.000Z"
+}
+```
+
+### Visits (you design the shape)
+
+Visits must be a real REST resource too, but the routing is your call: nested
+under a restaurant (`GET /api/restaurants/:id/visits`), a top-level
+`/api/visits`, or both. Whatever you choose, support list / read / create /
+update / delete with sensible status codes, and make creating a visit for a
+restaurant that does not exist fail with a `4xx` (not a `500`). Document your
+routes in your PR.
+
 ## Verifying your work
 
-There's no test suite - verify your endpoints yourself against your running
-database, with `curl` or a tool like [Postman](https://www.postman.com/) /
-[Insomnia](https://insomnia.rest/). Make sure Postgres is up (`docker compose up
--d`), you've run `npm run migrate` and `npm run seed`, and the server is running
-(`npm run dev`).
+There's no unit-test suite - verify your endpoints yourself against your running
+database. A Postman collection that encodes the contract above lives at
+`postman/feeding-brennen.postman_collection.json`. Import it into
+[Postman](https://www.postman.com/) / [Insomnia](https://insomnia.rest/), or run
+it headless:
 
-A few things your finished endpoints should do (for whichever tasks you pick):
+```bash
+npx newman run postman/feeding-brennen.postman_collection.json
+```
+
+The Restaurants requests assert the exact status codes, so a green run means you
+match the contract. The Visits requests are templates - point them at the routes
+you designed. Make sure Postgres is up (`docker compose up -d`), you've run
+`npm run migrate` and `npm run seed`, and the app is running (`npm run dev`).
+
+You can also spot-check with `curl`. A few things your finished endpoints should
+do (for whichever tasks you pick):
 
 ```bash
 # Reads (work today once the bug is fixed)
-curl http://localhost:3001/restaurants          # 200 + JSON array
-curl http://localhost:3001/restaurants/1        # 200 + one restaurant
-curl -i http://localhost:3001/restaurants/99999 # 404
+curl http://localhost:3000/api/restaurants          # 200 + JSON array
+curl http://localhost:3000/api/restaurants/1        # 200 + one restaurant
+curl -i http://localhost:3000/api/restaurants/99999 # 404
 
 # Create - should return 201 with the created row
-curl -i -X POST http://localhost:3001/restaurants \
+curl -i -X POST http://localhost:3000/api/restaurants \
   -H 'Content-Type: application/json' \
   -d '{"name":"Valid Spot","cuisine":"Test","address":"2 Test St","rating":4.5}'
 
 # Validation - an out-of-range rating should be rejected with 400, not stored
-curl -i -X POST http://localhost:3001/restaurants \
+curl -i -X POST http://localhost:3000/api/restaurants \
   -H 'Content-Type: application/json' \
   -d '{"name":"Out Of Range","rating":6}'
 ```

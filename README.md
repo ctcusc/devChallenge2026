@@ -6,39 +6,42 @@ couple of read endpoints are wired up for you. The rest is yours to build.
 
 ## Stack
 
-| Layer    | Tech                                          |
-| -------- | --------------------------------------------- |
-| Frontend | Next.js 14 (App Router), TypeScript, Tailwind |
-| Backend  | Node.js + Express, TypeScript                 |
-| Database | PostgreSQL (`pg`)                             |
+| Layer    | Tech                                              |
+| -------- | ------------------------------------------------- |
+| App      | Next.js 14 (App Router), TypeScript, Tailwind     |
+| API      | Next.js Route Handlers (`app/api/*`), TypeScript  |
+| Database | PostgreSQL (`pg`)                                 |
+
+One Next.js app serves both the UI and the REST API. There is no separate
+backend server: the API lives in route handlers under `app/api/`.
 
 ## Layout
 
 ```
 .
-├── client/     # Next.js frontend
-├── server/     # Express + PostgreSQL API
+├── client/     # the Next.js app: UI + REST API (route handlers) + DB layer
 └── SETUP.md    # Full setup & troubleshooting guide
 ```
+
+Inside `client/`: the UI is in `app/` (pages) and the REST API is in
+`app/api/` (route handlers); `db/` holds the connection pool, migrations, and
+seed script; `lib/` has the frontend fetch client and a shared error helper.
 
 ## Quick start
 
 See **[SETUP.md](./SETUP.md)** for the full walkthrough (prerequisites, database
 creation, env files, migrations, seeds, troubleshooting).
 
-The short version (Docker runs the database; npm runs the apps):
+The short version (Docker runs the database; one Next app serves the UI and API):
 
 ```bash
 # database - required, one command, no Postgres install needed
 docker compose up -d                                # Postgres on localhost:5432
 
-# server
-cd server && npm install && cp .env.example .env   # default DATABASE_URL matches compose
-npm run migrate && npm run seed && npm run dev      # http://localhost:3001
-
-# client (in a second terminal)
-cd client && npm install && cp .env.example .env
-npm run dev                                         # http://localhost:3000
+# the app (UI + API)
+cd client && npm install && cp .env.example .env    # default DATABASE_URL matches compose
+npm run migrate && npm run seed                     # create tables + sample data
+npm run dev                                          # http://localhost:3000 (API under /api)
 ```
 
 ## Your task
