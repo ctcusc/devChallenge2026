@@ -6,11 +6,11 @@ Docker.
 
 ## Prerequisites
 
-| Tool                    | Version | Notes                                    |
-| ----------------------- | ------- | ---------------------------------------- |
-| Node.js                 | 18+     | Required                                 |
-| npm                     | 9+      | Required                                 |
-| Docker + Docker Compose | 20.10+  | Required - runs PostgreSQL for everyone  |
+| Tool                    | Version | Download | Notes |
+|-------------------------|---------|----------|-------|
+| Node.js                 | 18+     | [nodejs.org](https://nodejs.org/) | Required |
+| npm                     | 9+      | Included with Node.js | Required |
+| Docker + Docker Compose | 20.10+  | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Required – runs PostgreSQL for everyone.<br>(Docker Desktop on macOS/Windows includes Compose.) |
 
 Check what you have:
 
@@ -22,9 +22,7 @@ docker compose version    # comes with modern Docker Desktop
 ```
 
 We run PostgreSQL through Docker so everyone - and every reviewer - is on the
-exact same database setup. Don't have Docker? Get it from
-[docker.com/get-started](https://www.docker.com/get-started/) (Docker Desktop on
-macOS/Windows includes Compose).
+exact same database setup.
 
 ## 1. Clone
 
@@ -45,8 +43,11 @@ From the repo root:
 docker compose up -d
 ```
 
+> If you see `Cannot connect to the Docker daemon...`, make sure **Docker Desktop is open and running**, then try the command again.
+
+
 That starts PostgreSQL in the background on `localhost:5432`, pre-configured to
-match the default `DATABASE_URL`. Confirm it's healthy:
+match the default `DATABASE_URL`. The initial docker compose up -d may take a minute or two! Confirm it's healthy:
 
 ```bash
 docker compose ps
@@ -96,6 +97,7 @@ own API (it's the same app, on the same port).
 # in client/
 npm install
 ```
+This downloads the project's dependencies. The first install usually takes **1–2 minutes**.
 
 ## 5. Run migrations
 
