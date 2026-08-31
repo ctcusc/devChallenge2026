@@ -150,19 +150,20 @@ a required process - if you already know what you want to build, go build it.
   as much or as little UI as your idea needs.
 - **Hold it to the A3 bar:** validated input, sensible status codes, handled
   failures.
-- **Document it in your PR** - the routes, the request/response shapes, and how
-  to exercise them. We can't review an API we can't find.
+- **Document it in `WriteUp.md`** - the routes, the request/response shapes,
+  and how to exercise them. We can't review an API we can't find.
 
 You can add migrations, add tables, change the schema, pull in a library - all
-fair game. Just say so in your PR's.
+fair game. Just say so in `WriteUp.md`.
 
 ---
 
 ## Your write-up
 
-Include this in your PR description. It carries real weight in how we evaluate
-you - for Part B it's often the difference between a good submission and a great
-one. Aim for **~300 words**, four questions:
+This goes in `WriteUp.md`, a file you add at the root of the repo. It carries
+real weight in how we evaluate you - for Part B it's often the difference
+between a good submission and a great one. Aim for **~300 words**, four
+questions:
 
 1. **What did you build for Part B, and why that?** What made you pick it over
    everything else you could have built? This is the question we care most about.
@@ -204,8 +205,9 @@ curl -i -X POST http://localhost:3000/api/restaurants \
 happy path _and_ the failures. Use whatever you like: `curl`, Postman, Insomnia,
 a scratch script.
 
-Tell us in your PR how you verified things. That's much faster for us to review
-than working it out ourselves, and it's how you show you checked the edge cases.
+Tell us in `WriteUp.md` how you verified things. That's much faster for us to
+review than working it out ourselves, and it's how you show you checked the edge
+cases.
 
 ## How we evaluate
 
@@ -244,7 +246,13 @@ This is the part we're most interested in.
 
 1. Work on a branch and open a pull request against your fork (or push to a repo
    you share with us - whatever was arranged).
-2. Put your **write-up** (see above) in an md file called "WriteUp.md" in the repo.
+2. Add a **`WriteUp.md`** at the root of the repo. Everything we need to read
+   goes in that one file:
+   - the write-up (see above),
+   - the routes you built for Part B and their request/response shapes,
+   - how you verified your work.
+
+   The PR description can just point at it.
 
 Good luck and tell us if anything in the setup fights you. That's useful
 feedback too.
