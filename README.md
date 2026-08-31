@@ -19,8 +19,11 @@ backend server: the API lives in route handlers under `app/api/`.
 
 ```
 .
-├── client/     # the Next.js app: UI + REST API (route handlers) + DB layer
-└── SETUP.md    # Full setup & troubleshooting guide
+├── client/            # the Next.js app: UI + REST API (route handlers) + DB layer
+├── setup.sh           # one-command setup
+├── SETUP.md           # setup & troubleshooting
+├── HOW-IT-WORKS.md    # how the repo fits together (start here if you're new)
+└── CHALLENGE.md       # the brief: what to build and how it's evaluated
 ```
 
 Inside `client/`: the UI is in `app/` (pages) and the REST API is in
@@ -44,11 +47,15 @@ prerequisites, what the script does, and troubleshooting.
 This repo intentionally stops short of a finished product. The structure,
 database layer, and read endpoints work; the rest is yours.
 
-**Read [CHALLENGE.md](./CHALLENGE.md)** for the full brief: what to build, the
-time expectation, how to verify your work, and exactly how submissions are
-evaluated.
+**Read [CHALLENGE.md](./CHALLENGE.md)** for the full brief: what to build, how
+to verify your work, and exactly how submissions are evaluated.
 
-The challenge is in two halves, roughly 90 minutes each:
+**New to backend work?** Read
+**[HOW-IT-WORKS.md](./HOW-IT-WORKS.md)** first - the request lifecycle end to
+end, how a URL becomes a route handler, what the status codes mean, and what
+every file is for.
+
+The challenge is in two halves:
 
 - **Part A (prescribed) - three tasks.** Fix the one planted bug, finish the
   Restaurant write API (`POST`, `PUT`, `DELETE`) against a fixed contract, then

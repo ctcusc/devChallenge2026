@@ -11,14 +11,19 @@ time, leave notes on what you'd do next.
 The challenge comes in two halves:
 
 - **Part A** is prescribed: three tasks, everyone builds the same thing, so we
-  can compare submissions fairly. Budget **~90 minutes**.
-- **Part B** is wide open. You decide what to build. Budget **~90 minutes**.
+  can compare submissions fairly.
+- **Part B** is wide open. You decide what to build.
 
-## Time expectation
+## Scope
 
-Plan for roughly **3 hours**, split evenly between the two parts. Don't
-gold-plate. If Part B is running long, **cut scope - don't extend the clock.**
-We would much rather read a small finished feature than a large broken one.
+We're not putting a clock on this - people come to it with very different
+starting points, and a number would only mislead half of you. Work at whatever
+pace is honest for you.
+
+What we do ask: **don't gold-plate.** If Part B is growing, cut scope rather
+than keep building. We would much rather read a small finished feature than a
+large broken one, and an unfinished submission with a clear write-up still
+tells us plenty.
 
 ## Before you start
 
@@ -41,10 +46,16 @@ So you know where the floor is:
 ## How it's put together
 
 It's **one Next.js app**. The UI lives in `app/` and the REST API lives in route
-handlers under `app/api/` (e.g. `app/api/restaurants/route.ts`). Those handlers
-talk to Postgres through the shared pool in `db/pool.ts`. There is no separate
-backend server and no Server Actions - the frontend reaches data only by calling
-the `/api` endpoints over HTTP, so building real REST endpoints is the whole job.
+handlers under `app/api/`. Those handlers talk to Postgres through the shared
+pool in `db/pool.ts`. There is no separate backend server and no Server Actions -
+the frontend reaches data only by calling the `/api` endpoints over HTTP, so
+building real REST endpoints is the whole job.
+
+**New to this?** [HOW-IT-WORKS.md](./HOW-IT-WORKS.md) walks through it properly:
+the request lifecycle end to end, how a URL becomes a route handler, what the
+status codes mean, what every file is for, and where to start if you haven't
+built a REST API before. **A partial submission is still worth submitting** -
+that page says more about why.
 
 ---
 
@@ -253,6 +264,9 @@ This is the part we're most interested in.
    - how you verified your work.
 
    The PR description can just point at it.
+
+**Submit even if you didn't finish.** An honest write-up about where you got to
+and what you'd do next is worth far more to us than an empty inbox.
 
 Good luck and tell us if anything in the setup fights you. That's useful
 feedback too.
