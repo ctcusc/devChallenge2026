@@ -10,8 +10,8 @@
 #   docker compose down         # stop it (data is kept)
 #   docker compose down -v      # stop it and delete all data (fresh start)
 #
-# The connection details below intentionally match the default DATABASE_URL in
-# server/.env.example:
+# The connection details below intentionally match the default DATABASE_URL
+# baked into client/db/pool.ts, so the app runs with no .env at all:
 #   postgresql://postgres:postgres@localhost:5432/feeding_brennen
 
 services:

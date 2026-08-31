@@ -1,10 +1,8 @@
-import { getRestaurants } from '@/lib/api';
+import { getRestaurants } from '@/lib/apiClient';
 
-// Server component. Fetches restaurants on each request and renders a plain list.
-//
-// This is deliberately bare: no loading state, no empty state, no error
-// handling. If the API is down or returns something unexpected, this will
-// break. Making it robust (and prettier) is up to you.
+// Server component. Fetches restaurants on each request and renders a plain
+// list. There is no loading state, no empty state, and no error handling: if
+// the API is down or returns something unexpected, this throws.
 export default async function HomePage() {
   const restaurants = await getRestaurants();
 
