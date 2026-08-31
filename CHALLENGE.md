@@ -8,16 +8,24 @@ We care more about how you think than about how much you finish. A focused,
 well-built subset beats a sprawling, half-working everything. If you run out of
 time, leave notes on what you'd do next.
 
+The challenge comes in two halves:
+
+- **Part A** is prescribed: three tasks, everyone builds the same thing, so we
+  can compare submissions fairly. Budget **~90 minutes**.
+- **Part B** is wide open. You decide what to build. Budget **~90 minutes**.
+
 ## Time expectation
 
-Plan for roughly **3-4 hours**. Don't gold-plate. If you're past 4 hours, stop
-and write up what's left.
+Plan for roughly **3 hours**, split evenly between the two parts. Don't
+gold-plate. If Part B is running long, **cut scope - don't extend the clock.**
+We would much rather read a small finished feature than a large broken one.
 
 ## Before you start
 
-Get it running by following **[SETUP.md](./SETUP.md)** (prerequisites, database,
-env files, migrations, seeds). You should be able to load
-http://localhost:3000 and see a list of restaurants once the bug below is fixed.
+Get it running by following **[SETUP.md](./SETUP.md)**: clone, run `./setup.sh`,
+then `cd client && npm run dev`. You should be able to load
+http://localhost:3000 and see a list of restaurants once the bug in Part A is
+fixed.
 
 ## What's already done
 
@@ -28,7 +36,7 @@ So you know where the floor is:
 - `GET /api/restaurants` and `GET /api/restaurants/:id` (route handlers)
 - A bare Next.js page that lists restaurants
 - A shared error helper for the API (`lib/errors.ts`) - currently a stub
-- A Postman collection (`postman/`) that encodes the API contract you build against
+- Shared types and row mappers (`lib/types.ts`) used by both sides of the API
 
 ## How it's put together
 
@@ -38,20 +46,14 @@ talk to Postgres through the shared pool in `db/pool.ts`. There is no separate
 backend server and no Server Actions - the frontend reaches data only by calling
 the `/api` endpoints over HTTP, so building real REST endpoints is the whole job.
 
-## What we want you to build
+---
 
-**You are not expected to do everything here.** Scope is deliberate:
+# Part A: the floor (required)
 
-1. **Fix the bug (required).** It's a small fix, and the app doesn't really run
-   until it's done - think of it as part of getting set up.
-2. **Then pick *two* of the five build-out tasks below (2-6)** and take them to
-   real depth. Two well-built features beat five half-built ones.
+**Three tasks.** Everyone builds this, and everyone builds it the same way. It's
+the part we can grade objectively, so finish it before you touch Part B.
 
-Depth over breadth. If you finish your two early and want to do more, great -
-but a focused, polished pair is exactly what we're looking for. Each item is
-marked with a `TODO` in the code.
-
-### Required first: Fix the bug
+### A1. Fix the bug
 
 `GET /api/restaurants` does not behave correctly. Find out why and fix it. (Hint:
 compare the query in the route handler to the migration.) Once fixed, `curl
@@ -61,83 +63,54 @@ load.
 
 `client/app/api/restaurants/route.ts`, `client/db/migrations/001_create_tables.sql`
 
----
+### A2. Finish the Restaurant write API
 
-### Then pick two of the following five
-
-### 2. Finish the Restaurant write API
-
-The write handlers are stubbed and return `501`.
+The three write handlers are stubbed and return `501`. Implement all three.
 
 `client/app/api/restaurants/route.ts` (POST),
 `client/app/api/restaurants/[id]/route.ts` (PUT, DELETE)
 
 - **`POST /api/restaurants`** -> insert and return the created restaurant with `201`.
 - **`PUT /api/restaurants/:id`** -> update and return the record, or `404`.
-- **`DELETE /api/restaurants/:id`** -> delete and return `204`, or `404`. Decide what
-  happens to that restaurant's visits.
+- **`DELETE /api/restaurants/:id`** -> delete and return `204`, or `404`.
 
-### 3. Add validation
+Match the contract table below exactly - including the response shape. Build
+your responses with `toRestaurant()` from `lib/types.ts`, the same helper the
+read endpoints use; returning a raw database row will not match (Postgres hands
+back `rating` as a string and timestamps as `Date` objects).
 
-Nothing validates input today. Most visibly: `rating` accepts **any** number,
-including `6`.
+### A3. Validate input and handle errors
 
-`client/app/api/restaurants/` (and your visit handlers)
+A2 gets the happy path working. This is what makes it finished - an endpoint
+that only works on well-formed input isn't done.
 
-- Reject out-of-range ratings (decide the range, e.g. `0-5`) with a `400`.
-- Validate required fields and types for restaurants and visits.
+`client/app/api/restaurants/` (validation),
+`client/lib/errors.ts` (the shared handler)
 
-### 4. Build the Visit API from scratch
+- **Validate before you touch the database.** Nothing validates anything today;
+  most visibly, `rating` accepts any number, including `6`. Decide what valid
+  means for each field and reject bad input with a `400`. Required fields and
+  types matter as much as ranges.
+- **Handle errors in one place.** `lib/errors.ts` is a stub that always returns
+  `500`. Make it map known failures to the right status (`400`, `404`, `409`,
+  ...) and call it from your `catch` blocks instead of hand-rolling a response
+  in every route.
+- **Don't leak internals.** No stack traces or raw database errors in responses.
+- **Cover the unhappy paths.** Missing records, malformed bodies, wrong types,
+  duplicates. None of them should produce a `500`.
 
-`Visit` has a table and seed data, but **no API at all**. There are no route
-handlers for it yet.
+### API contract
 
-create `client/app/api/visits/route.ts` (and/or
-`client/app/api/restaurants/[id]/visits/route.ts`)
+Part A is a fixed contract. Match it exactly - these status codes are what we
+check against.
 
-- Support listing, reading, creating, updating, and deleting visits.
-- Decide on the shape: nested under a restaurant
-  (`GET /api/restaurants/:id/visits`), a top-level `/api/visits` resource, or both.
-- A visit for a restaurant that doesn't exist should be rejected (not 500).
-
-### 5. Harden the error handling
-
-The shared error helper is a stub that always returns `500`.
-
-`client/lib/errors.ts`
-
-- Map known error types to appropriate status codes (`400`, `404`, `409`, ...).
-- Call it consistently from your route handlers' `catch` blocks.
-- Don't leak internal error details in responses.
-
-### 6. Make the frontend real
-
-The list is a bare server-side fetch with no states.
-
-`client/app/page.tsx`, `client/lib/api.ts`
-
-- Add **loading**, **empty**, and **error** states.
-- Handle non-`200` responses and network failures in the API helpers.
-- Anything that makes it feel finished: a restaurant detail view, showing a
-  restaurant's visits, forms to add data, totals/spend summaries, etc.
-
-## API contract
-
-This is a REST API exercise. Your endpoints are Next.js route handlers under
-`app/api/`. They must speak HTTP and return JSON, and both the frontend and our
-review talk to them only over HTTP at `http://localhost:3000/api` - there is no
-shortcut around building real endpoints (no Server Actions, no direct DB calls
-from the page).
-
-### Restaurants (fixed contract)
-
-| Method and path | Success | Errors |
-| --------------- | ------- | ------ |
-| `GET /api/restaurants` | `200` + JSON array | - |
-| `GET /api/restaurants/:id` | `200` + restaurant | `404` if missing |
-| `POST /api/restaurants` | `201` + created restaurant (with `id`) | `400` on invalid body (missing `name`, `rating` outside 0-5, ...) |
-| `PUT /api/restaurants/:id` | `200` + updated restaurant | `404` if missing, `400` on invalid body |
-| `DELETE /api/restaurants/:id` | `204`, no body | `404` if missing |
+| Method and path               | Success                                | Errors                                                            |
+| ----------------------------- | -------------------------------------- | ----------------------------------------------------------------- |
+| `GET /api/restaurants`        | `200` + JSON array                     | -                                                                 |
+| `GET /api/restaurants/:id`    | `200` + restaurant                     | `404` if missing                                                  |
+| `POST /api/restaurants`       | `201` + created restaurant (with `id`) | `400` on invalid body (missing `name`, `rating` outside 0-5, ...) |
+| `PUT /api/restaurants/:id`    | `200` + updated restaurant             | `404` if missing, `400` on invalid body                           |
+| `DELETE /api/restaurants/:id` | `204`, no body                         | `404` if missing                                                  |
 
 Restaurant shape:
 
@@ -152,34 +125,64 @@ Restaurant shape:
 }
 ```
 
-### Visits (you design the shape)
+---
 
-Visits must be a real REST resource too, but the routing is your call: nested
-under a restaurant (`GET /api/restaurants/:id/visits`), a top-level
-`/api/visits`, or both. Whatever you choose, support list / read / create /
-update / delete with sensible status codes, and make creating a visit for a
-restaurant that does not exist fail with a `4xx` (not a `500`). Document your
-routes in your PR.
+# Part B: ship one thing (wide open)
+
+Feeding Brennen is supposed to track what Brennen spends eating out. Right now
+it barely does anything.
+
+**Ship one thing that makes it better.** You decide what. The feature, the
+routes, the data shape, the UI - all yours.
+
+There is no list to pick from, no hidden answer we're waiting for, and no
+category of work we favor. We give this to a lot of people, and we'd be
+disappointed if the submissions all looked alike.
+
+If it helps to get unstuck: use the app for ten minutes, read the schema in
+`client/db/migrations/`, and notice what annoys you. But that's one way in, not
+a required process - if you already know what you want to build, go build it.
+
+### The only rules
+
+- **Some of it has to be a real API under `/api`.** Route handlers that speak
+  HTTP - no Server Actions, no direct DB calls from a page. Beyond that, build
+  as much or as little UI as your idea needs.
+- **Hold it to the A3 bar:** validated input, sensible status codes, handled
+  failures.
+- **Document it in `WriteUp.md`** - the routes, the request/response shapes,
+  and how to exercise them. We can't review an API we can't find.
+
+You can add migrations, add tables, change the schema, pull in a library - all
+fair game. Just say so in `WriteUp.md`.
+
+---
+
+## Your write-up
+
+This goes in `WriteUp.md`, a file you add at the root of the repo. It carries
+real weight in how we evaluate you - for Part B it's often the difference
+between a good submission and a great one. Aim for **~300 words**, four
+questions:
+
+1. **What did you build for Part B, and why that?** What made you pick it over
+   everything else you could have built? This is the question we care most about.
+2. **What did you decide, and what did you rule out?** Route shapes, data model,
+   where logic lives, what you deliberately didn't do.
+3. **Where did you cut corners?** What would you fix first with another day?
+4. **What should we look at first?**
+
+Write it like you're handing the work to a teammate. We'd rather read an honest
+"I ran out of time on X and here's what I'd do" than a polished list of
+accomplishments.
 
 ## Verifying your work
 
 There's no unit-test suite - verify your endpoints yourself against your running
-database. A Postman collection that encodes the contract above lives at
-`postman/feeding-brennen.postman_collection.json`. Import it into
-[Postman](https://www.postman.com/) / [Insomnia](https://insomnia.rest/), or run
-it headless:
+database.
 
-```bash
-npx newman run postman/feeding-brennen.postman_collection.json
-```
-
-The Restaurants requests assert the exact status codes, so a green run means you
-match the contract. The Visits requests are templates - point them at the routes
-you designed. Make sure Postgres is up (`docker compose up -d`), you've run
-`npm run migrate` and `npm run seed`, and the app is running (`npm run dev`).
-
-You can also spot-check with `curl`. A few things your finished endpoints should
-do (for whichever tasks you pick):
+**For Part A**, work through the contract table above and confirm each row -
+every status code in it, including the error cases. `curl` is plenty:
 
 ```bash
 # Reads (work today once the bug is fixed)
@@ -198,46 +201,58 @@ curl -i -X POST http://localhost:3000/api/restaurants \
   -d '{"name":"Out Of Range","rating":6}'
 ```
 
-Walk through the equivalent cases for any resource you build (e.g. creating a
-visit for a restaurant that doesn't exist should fail cleanly, not 500). Showing
-your verification - a Postman collection, a `curl` script, or notes in your PR -
-is a great way to demonstrate you checked the edge cases.
+**For Part B**, walk through the equivalent cases for whatever you built - the
+happy path _and_ the failures. Use whatever you like: `curl`, Postman, Insomnia,
+a scratch script.
+
+Tell us in `WriteUp.md` how you verified things. That's much faster for us to
+review than working it out ourselves, and it's how you show you checked the edge
+cases.
 
 ## How we evaluate
 
-We grade the **two tasks you chose** (plus the required bug fix) on how well
-they're built - not on how many of the six you touched. A focused, polished pair
-is a strong submission. For each task you take on, we look at:
+Two parts, two different questions.
 
-| What we look for | Means |
-| ---------------- | ----- |
-| **Correctness** | It actually works, including edge cases and the right status codes |
-| **Design** | Sensible routes, request/response shapes, or UI structure - choices a reviewer would make too |
-| **Validation & errors** | Bad input is rejected with useful 4xx responses; failures are handled, not leaked |
-| **Code quality** | Readable, consistent, well-organized; no obvious footguns |
-| **Edge cases** | You handled the unhappy paths - bad input, missing records, duplicates - and can show how you verified them |
+### Part A - did you build it correctly?
 
-We'd rather see two features that nail all of the above than five that gesture
-at each. Tell us in your write-up which two you chose and why.
+Mostly objective - it either matches the contract or it doesn't.
 
-Bonus (not required, only if your two are already solid): thoughtful spend/visit
-summaries, pagination or filtering, optimistic UI, accessibility, CI.
+| What we look for        | Means                                                                                                       |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| **Correctness**         | It actually works, including edge cases and the right status codes                                          |
+| **Validation & errors** | Bad input is rejected with useful 4xx responses; failures are handled in one place, not leaked              |
+| **Edge cases**          | You handled the unhappy paths - bad input, missing records, duplicates - and can show how you verified them |
+| **Code quality**        | Readable, consistent, well-organized; no obvious footguns                                                   |
+
+### Part B - did you make good calls?
+
+This is the part we're most interested in.
+
+| What we look for | Means                                                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Judgment**     | Can you explain why this was worth building? We're judging your reasoning, not whether we'd have picked the same thing |
+| **Design**       | Do the routes, request/response shapes, and UI structure hold up? Choices a reviewer would make too                    |
+| **Finish**       | Does it actually work end to end, not just on the happy path?                                                          |
+| **Write-up**     | Can you justify the call, name your own tradeoffs, and say what you'd do next?                                         |
 
 ### What we're **not** grading on
 
+- **How impressive Part B sounds.** A small, finished, well-reasoned feature
+  beats an ambitious broken one. Every time.
 - Pixel-perfect design or a component library - clean and clear is plenty.
-- Auth, deployment, or multi-user concerns. Out of scope.
-- Finishing every single item. Depth over breadth.
+- Volume. We are not counting features or lines of code.
 
 ## Submitting
 
 1. Work on a branch and open a pull request against your fork (or push to a repo
    you share with us - whatever was arranged).
-2. In the PR description, include a short **README of your changes**:
-   - **Which two tasks you chose**, and why.
-   - What you built and any decisions/tradeoffs you made.
-   - What you'd do next with more time.
-   - Anything you want us to look at first.
+2. Add a **`WriteUp.md`** at the root of the repo. Everything we need to read
+   goes in that one file:
+   - the write-up (see above),
+   - the routes you built for Part B and their request/response shapes,
+   - how you verified your work.
 
-Good luck - and tell us if anything in the setup fights you. That's useful
+   The PR description can just point at it.
+
+Good luck and tell us if anything in the setup fights you. That's useful
 feedback too.

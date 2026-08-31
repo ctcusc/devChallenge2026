@@ -4,12 +4,12 @@
 import 'dotenv/config';
 import { Pool } from 'pg';
 
-if (!process.env.DATABASE_URL) {
-  // Fail loudly rather than silently connecting to some default database.
-  throw new Error(
-    'DATABASE_URL is not set. Copy .env.example to .env and fill it in.'
-  );
-}
+// Defaults to the database `docker compose up -d` starts for you, so the app
+// runs with no .env at all. Set DATABASE_URL (in client/.env) to point
+// somewhere else - a different port, or a Postgres you manage yourself.
+const DATABASE_URL =
+  process.env.DATABASE_URL ??
+  'postgresql://postgres:postgres@localhost:5432/feeding_brennen';
 
 // Reuse a single pool across hot reloads in dev. Next re-imports modules on
 // every change, which would otherwise leak a new Pool (and its connections)
@@ -24,7 +24,7 @@ const globalForPool = globalThis as unknown as { pool?: Pool };
  *   const { rows } = await pool.query('SELECT * FROM restaurants');
  */
 export const pool =
-  globalForPool.pool ?? new Pool({ connectionString: process.env.DATABASE_URL });
+  globalForPool.pool ?? new Pool({ connectionString: DATABASE_URL });
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPool.pool = pool;

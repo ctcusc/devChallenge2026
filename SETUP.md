@@ -1,133 +1,39 @@
 # Setup
 
-Get Feeding Brennen running locally. The whole thing should be up in a few
-minutes. It's a single Next.js app (UI + API) plus a PostgreSQL database in
-Docker.
+Get Feeding Brennen running locally. It's a single Next.js app (UI + API) plus a
+PostgreSQL database in Docker. Two commands, a few minutes.
 
 ## Prerequisites
 
 | Tool                    | Version | Download | Notes |
 |-------------------------|---------|----------|-------|
 | Node.js                 | 18+     | [nodejs.org](https://nodejs.org/) | Required |
-| npm                     | 9+      | Included with Node.js | Required |
-| Docker + Docker Compose | 20.10+  | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Required – runs PostgreSQL for everyone.<br>(Docker Desktop on macOS/Windows includes Compose.) |
+| Docker + Docker Compose | 20.10+  | [Docker Desktop](https://www.docker.com/products/docker-desktop/) | Required - runs PostgreSQL.<br>Docker Desktop includes Compose. |
 
-Check what you have:
+**Make sure Docker Desktop is open and running before you start.** The setup
+script checks for both tools and tells you what's missing, so you don't have to
+verify versions by hand.
 
-```bash
-node --version            # v18 or newer
-npm --version             # 9 or newer
-docker --version          # 20.10 or newer
-docker compose version    # comes with modern Docker Desktop
-```
-
-We run PostgreSQL through Docker so everyone - and every reviewer - is on the
-exact same database setup.
-
-## 1. Clone
+## Run it
 
 ```bash
 git clone <your-fork-url> feeding-brennen
 cd feeding-brennen
+./setup.sh
 ```
 
-## 2. Start the database
+That script starts PostgreSQL in Docker, installs dependencies, creates the
+tables, and loads sample data. It's safe to re-run at any point.
 
-Everyone runs PostgreSQL the same way: through Docker Compose. It spins up the
-database with the right user, password, and database name already configured, so
-there's nothing to install or create by hand.
-
-From the repo root:
-
-```bash
-docker compose up -d
-```
-
-> If you see `Cannot connect to the Docker daemon...`, make sure **Docker Desktop is open and running**, then try the command again.
-
-
-That starts PostgreSQL in the background on `localhost:5432`, pre-configured to
-match the default `DATABASE_URL`. The initial docker compose up -d may take a minute or two! Confirm it's healthy:
-
-```bash
-docker compose ps
-# the `db` service should show "running (healthy)"
-```
-
-Useful commands later:
-
-```bash
-docker compose down       # stop the DB (your data is kept)
-docker compose down -v    # stop the DB and wipe all data (fresh start)
-docker compose logs db     # tail database logs
-```
-
-That's it - no need to create the database by hand; Compose already did.
-
-> **Really can't run Docker?** As a last resort you can install PostgreSQL
-> natively, create a database with `createdb feeding_brennen` (or
-> `psql -U postgres -c "CREATE DATABASE feeding_brennen;"`), and point
-> `DATABASE_URL` at it. This isn't the supported path - reviewers run the Docker
-> setup - so only do this if Docker truly isn't an option for you.
-
-## 3. Configure environment variables
-
-The app reads its config from a `.env` file in `client/`. Copy the example:
+Then start the app:
 
 ```bash
 cd client
-cp .env.example .env
-```
-
-The defaults already match the Docker database and the app's own port, so you
-normally don't need to change anything:
-
-```
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/feeding_brennen
-NEXT_PUBLIC_API_URL=http://localhost:3000
-```
-
-`DATABASE_URL` is used by both the API route handlers and the migrate/seed
-scripts. `NEXT_PUBLIC_API_URL` is the origin the frontend uses to call the app's
-own API (it's the same app, on the same port).
-
-## 4. Install dependencies
-
-```bash
-# in client/
-npm install
-```
-This downloads the project's dependencies. The first install usually takes **1–2 minutes**.
-
-## 5. Run migrations
-
-This creates the `restaurants` and `visits` tables:
-
-```bash
-npm run migrate
-```
-
-You should see `Applied 1 migration(s).`
-
-## 6. Seed sample data
-
-Loads 5 restaurants and 3 visits:
-
-```bash
-npm run seed
-```
-
-You should see `Seeded 5 restaurants and 3 visits.`
-
-## 7. Start the app
-
-```bash
-# in client/
 npm run dev
 ```
 
 The app comes up on **http://localhost:3000** - that serves both the UI and the
-REST API (under `/api`). Sanity check the API:
+REST API (under `/api`). Sanity check it:
 
 ```bash
 curl http://localhost:3000/api/health
@@ -135,7 +41,8 @@ curl http://localhost:3000/api/health
 ```
 
 The home page lists the seeded restaurants once the planted bug is fixed (see
-CHALLENGE.md).
+[CHALLENGE.md](./CHALLENGE.md)). Until then, `/api/restaurants` returns a 500 -
+that's expected, and it's your first task.
 
 ## Expected URLs
 
@@ -148,55 +55,95 @@ CHALLENGE.md).
 
 ---
 
+## What the setup script did
+
+You don't need this to get started - it's here so nothing is a black box.
+
+| Step | Command | Why |
+| ---- | ------- | --- |
+| Start the database | `docker compose up -d` | Runs PostgreSQL 16 on `localhost:5432`, pre-configured with the right user, password, and database name. |
+| Install dependencies | `npm install` (in `client/`) | Standard. |
+| Create tables | `npm run migrate` (in `client/`) | Applies `client/db/migrations/*.sql`. Prints `Applied 1 migration(s).` |
+| Load sample data | `npm run seed` (in `client/`) | Loads 5 restaurants and 3 visits. Prints `Seeded 5 restaurants and 3 visits.` |
+
+Run any of them individually whenever you need to - re-seed after you've made a
+mess of the data, re-migrate after you add a migration.
+
+Useful database commands:
+
+```bash
+docker compose down       # stop the DB (your data is kept)
+docker compose down -v    # stop the DB and wipe all data (fresh start)
+docker compose logs db    # tail database logs
+docker compose ps         # check status - `db` should be "running (healthy)"
+```
+
+## Configuration (you probably don't need this)
+
+There is **no `.env` to set up**. The app defaults to the database that
+`docker compose` starts, so the standard setup needs no configuration at all.
+
+If you do need to point somewhere else - a different port, or a Postgres you
+manage yourself - create `client/.env` (see `client/.env.example`):
+
+| Variable | Default | What it's for |
+| -------- | ------- | ------------- |
+| `DATABASE_URL` | `postgresql://postgres:postgres@localhost:5432/feeding_brennen` | Used by the API route handlers and the migrate/seed scripts. |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:3000` | The origin the frontend uses to call the app's own API. Change it only if you run on a different port. |
+
+---
+
 ## Troubleshooting
+
+### `Cannot connect to the Docker daemon` / "Docker is installed but not running"
+
+Docker Desktop isn't running. Open it, wait for the whale icon to settle, then
+re-run `./setup.sh`.
 
 ### `connection refused` / `ECONNREFUSED ... 5432`
 
 The app can't reach PostgreSQL.
 
-- Make sure the container is up and healthy: `docker compose ps` should show the
-  `db` service as `running (healthy)`. If not, `docker compose up -d` and check
+- Check the container: `docker compose ps` should show `db` as
+  `running (healthy)`. If not, `docker compose up -d` and check
   `docker compose logs db`.
-- Confirm the host and port in `DATABASE_URL` match where Postgres is listening
-  (default `localhost:5432`).
+- If you set a custom `DATABASE_URL`, confirm its host and port match where
+  Postgres is actually listening.
 
-### `DATABASE_URL is not set`
+### Docker: port 5432 already allocated
 
-You haven't created `client/.env` (or it's missing the variable). Revisit
-step 3.
+Another Postgres (often a native install) already owns port 5432, so the
+container can't bind it. Either stop the other one (e.g.
+`brew services stop postgresql@16`), or remap the container: change the `ports`
+line in `docker-compose.yml` to `"5433:5432"`, then create `client/.env` with a
+`DATABASE_URL` using port `5433`.
 
 ### Port already in use (`EADDRINUSE` on 3000)
 
 Something is already listening on 3000.
 
 - Find and stop it: `lsof -i :3000`, then `kill <PID>`.
-- Or run the app on another port: `npm run dev -- -p 3001`, and update
-  `NEXT_PUBLIC_API_URL` in `client/.env` to match.
+- Or run on another port: `npm run dev -- -p 3001`, and set
+  `NEXT_PUBLIC_API_URL=http://localhost:3001` in `client/.env`.
 
-### Docker: port 5432 already allocated
+### Starting over with a clean database
 
-Another Postgres (often a native install) is already using port 5432, so the
-container can't bind it. Either stop the other one (e.g. `brew services stop
-postgresql@16`), or remap the container in `docker-compose.yml` - change the
-`ports` line to `"5433:5432"` and update the port in `DATABASE_URL` to `5433`.
-
-### Docker: starting over with a clean database
-
-Wipe the container's data and bring it back up empty, then re-migrate and
-re-seed:
+Wipe the container's data and rebuild from scratch:
 
 ```bash
 docker compose down -v
-docker compose up -d
-cd client && npm run migrate && npm run seed
+./setup.sh
 ```
 
-### Migration errors
+### `relation "restaurants" already exists`
 
-- **`relation "restaurants" already exists`** - the tables are already there.
-  The migrations use `IF NOT EXISTS`, so this is usually safe to ignore. To start
-  fresh, wipe the Docker database (see "starting over" above).
-- **`DATABASE_URL is not set`** - you haven't created `client/.env`. Revisit
-  step 3.
-- **Anything hanging** - double-check Postgres is running and reachable (see
-  "connection refused" above).
+The tables are already there. Migrations use `IF NOT EXISTS`, so this is safe to
+ignore. To start genuinely fresh, see "starting over" above.
+
+### Really can't run Docker?
+
+As a last resort, install PostgreSQL natively, create a database with
+`createdb feeding_brennen`, and point `DATABASE_URL` at it in `client/.env`.
+Then run `npm install`, `npm run migrate`, and `npm run seed` in `client/`
+yourself. This isn't the supported path - reviewers run the Docker setup - so
+only do this if Docker truly isn't an option.

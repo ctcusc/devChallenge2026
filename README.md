@@ -29,20 +29,15 @@ seed script; `lib/` has the frontend fetch client and a shared error helper.
 
 ## Quick start
 
-See **[SETUP.md](./SETUP.md)** for the full walkthrough (prerequisites, database
-creation, env files, migrations, seeds, troubleshooting).
-
-The short version (Docker runs the database; one Next app serves the UI and API):
+Make sure **Docker Desktop is running**, then:
 
 ```bash
-# database - required, one command, no Postgres install needed
-docker compose up -d                                # Postgres on localhost:5432
-
-# the app (UI + API)
-cd client && npm install && cp .env.example .env    # default DATABASE_URL matches compose
-npm run migrate && npm run seed                     # create tables + sample data
-npm run dev                                          # http://localhost:3000 (API under /api)
+./setup.sh                  # database, dependencies, tables, sample data
+cd client && npm run dev    # http://localhost:3000 (UI + API under /api)
 ```
+
+That's it - there's no `.env` to configure. See **[SETUP.md](./SETUP.md)** for
+prerequisites, what the script does, and troubleshooting.
 
 ## Your task
 
@@ -53,19 +48,16 @@ database layer, and read endpoints work; the rest is yours.
 time expectation, how to verify your work, and exactly how submissions are
 evaluated.
 
-**Scope:** fix the one planted bug (required - the app barely runs without it),
-then pick **two** of the five build-out tasks below and do them well. You are
-**not** expected to finish all of them - depth over breadth.
+The challenge is in two halves, roughly 90 minutes each:
 
-The five build-out tasks (pick two):
+- **Part A (prescribed) - three tasks.** Fix the one planted bug, finish the
+  Restaurant write API (`POST`, `PUT`, `DELETE`) against a fixed contract, then
+  validate the input and handle errors properly. Everyone builds this, so we can
+  compare submissions fairly.
+- **Part B (wide open).** Ship one thing that makes the app better. You decide
+  the feature, the routes, the data shape, the UI. There's no list to pick from
+  and no answer key - build the thing you find interesting.
 
-- Restaurants only support reads (`GET`). Create / update / delete are stubbed.
-- Visits have a data model and seed data, but **no API at all** yet.
-- There's no validation on the data going into the database.
-- The error handler is a stub.
-- The frontend list has no loading / empty / error states.
-
-Everything above is marked with a `TODO` in the code. There's no test suite -
-verify your endpoints yourself with `curl` or Postman against your running
-database (see CHALLENGE.md for examples). Take your two tasks from "scaffold" to
-"real, usable app," and leave notes on what you'd do next. Have fun.
+There's no test suite - verify your endpoints yourself against your running
+database (see CHALLENGE.md). Go small, finish what you start, and write up why
+you built what you built. Have fun.

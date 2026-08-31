@@ -14,8 +14,11 @@ import { NextResponse } from 'next/server';
  * implementation would inspect the error (validation vs. not-found vs.
  * conflict vs. unexpected) and choose an appropriate status code and shape.
  *
- * TODO: map known error types to proper status codes (400, 404, 409, ...)
- * TODO: avoid leaking internal error details in responses
+ * This is task A3. The write endpoints from A2 can't return sensible 400s and
+ * 404s while every failure funnels into a 500.
+ *
+ * TODO (A3): map known error types to proper status codes (400, 404, 409, ...)
+ * TODO (A3): avoid leaking internal error details in responses
  */
 export function handleError(err: unknown): NextResponse {
   console.error('Unhandled API error:', err);
