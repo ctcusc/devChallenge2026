@@ -154,14 +154,7 @@ a required process - if you already know what you want to build, go build it.
   to exercise them. We can't review an API we can't find.
 
 You can add migrations, add tables, change the schema, pull in a library - all
-fair game. Just say so in your write-up.
-
-### Go small
-
-One small feature, finished, beats three started. If you're choosing between
-ambitious and done, **pick done** - and tell us in the write-up what the
-ambitious version would have been. We're not scoring how impressive the idea
-sounds. A tiny feature you can defend beats a big one you can't.
+fair game. Just say so in your PR's.
 
 ---
 
@@ -244,18 +237,14 @@ This is the part we're most interested in.
 
 - **How impressive Part B sounds.** A small, finished, well-reasoned feature
   beats an ambitious broken one. Every time.
-- **Whether we'd have built the same thing.** We wouldn't have, and that's fine.
-  There's no answer key here.
 - Pixel-perfect design or a component library - clean and clear is plenty.
-- Auth, deployment, or multi-user concerns. Out of scope.
 - Volume. We are not counting features or lines of code.
 
 ## Submitting
 
 1. Work on a branch and open a pull request against your fork (or push to a repo
    you share with us - whatever was arranged).
-2. Put your **write-up** (see above) in the PR description, along with the route
-   documentation for whatever you built in Part B.
+2. Put your **write-up** (see above) in an md file called "WriteUp.md" in the repo.
 
-Good luck - and tell us if anything in the setup fights you. That's useful
+Good luck and tell us if anything in the setup fights you. That's useful
 feedback too.
