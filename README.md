@@ -47,16 +47,15 @@ prerequisites, what the script does, and troubleshooting.
 This repo intentionally stops short of a finished product. The structure,
 database layer, and read endpoints work; the rest is yours.
 
-**Read [CHALLENGE.md](./CHALLENGE.md)** for the full brief: what to build, the
-time expectation, how to verify your work, and exactly how submissions are
-evaluated.
+**Read [CHALLENGE.md](./CHALLENGE.md)** for the full brief: what to build, how
+to verify your work, and exactly how submissions are evaluated.
 
 **New to backend work?** Read
 **[HOW-IT-WORKS.md](./HOW-IT-WORKS.md)** first - the request lifecycle end to
 end, how a URL becomes a route handler, what the status codes mean, and what
 every file is for.
 
-The challenge is in two halves, roughly 90 minutes each:
+The challenge is in two halves:
 
 - **Part A (prescribed) - three tasks.** Fix the one planted bug, finish the
   Restaurant write API (`POST`, `PUT`, `DELETE`) against a fixed contract, then

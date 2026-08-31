@@ -11,14 +11,19 @@ time, leave notes on what you'd do next.
 The challenge comes in two halves:
 
 - **Part A** is prescribed: three tasks, everyone builds the same thing, so we
-  can compare submissions fairly. Budget **~90 minutes**.
-- **Part B** is wide open. You decide what to build. Budget **~90 minutes**.
+  can compare submissions fairly.
+- **Part B** is wide open. You decide what to build.
 
-## Time expectation
+## Scope
 
-Plan for roughly **3 hours**, split evenly between the two parts. Don't
-gold-plate. If Part B is running long, **cut scope - don't extend the clock.**
-We would much rather read a small finished feature than a large broken one.
+We're not putting a clock on this - people come to it with very different
+starting points, and a number would only mislead half of you. Work at whatever
+pace is honest for you.
+
+What we do ask: **don't gold-plate.** If Part B is growing, cut scope rather
+than keep building. We would much rather read a small finished feature than a
+large broken one, and an unfinished submission with a clear write-up still
+tells us plenty.
 
 ## Before you start
 
