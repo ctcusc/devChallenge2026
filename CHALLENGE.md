@@ -41,10 +41,16 @@ So you know where the floor is:
 ## How it's put together
 
 It's **one Next.js app**. The UI lives in `app/` and the REST API lives in route
-handlers under `app/api/` (e.g. `app/api/restaurants/route.ts`). Those handlers
-talk to Postgres through the shared pool in `db/pool.ts`. There is no separate
-backend server and no Server Actions - the frontend reaches data only by calling
-the `/api` endpoints over HTTP, so building real REST endpoints is the whole job.
+handlers under `app/api/`. Those handlers talk to Postgres through the shared
+pool in `db/pool.ts`. There is no separate backend server and no Server Actions -
+the frontend reaches data only by calling the `/api` endpoints over HTTP, so
+building real REST endpoints is the whole job.
+
+**New to this?** [HOW-IT-WORKS.md](./HOW-IT-WORKS.md) walks through it properly:
+the request lifecycle end to end, how a URL becomes a route handler, what the
+status codes mean, what every file is for, and where to start if you haven't
+built a REST API before. **A partial submission is still worth submitting** -
+that page says more about why.
 
 ---
 
@@ -253,6 +259,9 @@ This is the part we're most interested in.
    - how you verified your work.
 
    The PR description can just point at it.
+
+**Submit even if you didn't finish.** An honest write-up about where you got to
+and what you'd do next is worth far more to us than an empty inbox.
 
 Good luck and tell us if anything in the setup fights you. That's useful
 feedback too.
