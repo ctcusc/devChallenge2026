@@ -23,7 +23,8 @@ backend server: the API lives in route handlers under `app/api/`.
 ├── setup.sh           # one-command setup
 ├── SETUP.md           # setup & troubleshooting
 ├── HOW-IT-WORKS.md    # how the repo fits together (start here if you're new)
-└── CHALLENGE.md       # the brief: what to build and how it's evaluated
+├── CHALLENGE.md       # the brief: what to build and how it's evaluated
+└── WriteUp.md         # your write-up - a skeleton to fill in, submitted with your work
 ```
 
 Inside `client/`: the UI is in `app/` (pages) and the REST API is in
@@ -41,6 +42,13 @@ cd client && npm run dev    # http://localhost:3000 (UI + API under /api)
 
 That's it - there's no `.env` to configure. See **[SETUP.md](./SETUP.md)** for
 prerequisites, what the script does, and troubleshooting.
+
+**On Windows:** run everything from WSL2 or Git Bash - `setup.sh` won't run in
+PowerShell or `cmd.exe`. [SETUP.md](./SETUP.md#on-windows) has the details.
+
+**Heads up:** on a fresh clone, http://localhost:3000 shows a Next.js error
+screen (`restaurants.map is not a function`). That's expected - it's the planted
+bug in Part A1, not a broken setup.
 
 ## Your task
 

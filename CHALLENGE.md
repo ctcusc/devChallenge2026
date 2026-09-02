@@ -28,9 +28,14 @@ tells us plenty.
 ## Before you start
 
 Get it running by following **[SETUP.md](./SETUP.md)**: clone, run `./setup.sh`,
-then `cd client && npm run dev`. You should be able to load
-http://localhost:3000 and see a list of restaurants once the bug in Part A is
-fixed.
+then `cd client && npm run dev`. (On Windows, work in WSL2 or Git Bash -
+`setup.sh` is a shell script.)
+
+On a fresh clone http://localhost:3000 shows a Next.js error screen reading
+`restaurants.map is not a function`. **That's expected, not a broken setup** -
+it's the bug in A1 below. Fix it and the page lists the seeded restaurants.
+`curl http://localhost:3000/api/health` returning `{"status":"ok"}` is how you
+confirm the setup itself is fine.
 
 ## What's already done
 
@@ -109,6 +114,10 @@ that only works on well-formed input isn't done.
 - **Don't leak internals.** No stack traces or raw database errors in responses.
 - **Cover the unhappy paths.** Missing records, malformed bodies, wrong types,
   duplicates. None of them should produce a `500`.
+- **The two `GET` handlers count too.** They're written, but they're not
+  hardened - `GET /api/restaurants/abc` currently returns a `500`, because the
+  id goes straight to Postgres and blows up there. The contract below says that
+  route answers `404`. Fixing that is part of A3.
 
 ### API contract
 
@@ -118,10 +127,14 @@ check against.
 | Method and path               | Success                                | Errors                                                            |
 | ----------------------------- | -------------------------------------- | ----------------------------------------------------------------- |
 | `GET /api/restaurants`        | `200` + JSON array                     | -                                                                 |
-| `GET /api/restaurants/:id`    | `200` + restaurant                     | `404` if missing                                                  |
+| `GET /api/restaurants/:id`    | `200` + restaurant                     | `404` if missing *or* if `:id` isn't a positive integer            |
 | `POST /api/restaurants`       | `201` + created restaurant (with `id`) | `400` on invalid body (missing `name`, `rating` outside 0-5, ...) |
 | `PUT /api/restaurants/:id`    | `200` + updated restaurant             | `404` if missing, `400` on invalid body                           |
 | `DELETE /api/restaurants/:id` | `204`, no body                         | `404` if missing                                                  |
+
+On any `:id` route, an id that isn't a positive integer (`abc`, `-1`, `1.5`)
+is a **`404`**, not a `400` - there's no such restaurant, and that's the answer
+we check for. A `500` is wrong in every row of this table.
 
 Restaurant shape:
 
@@ -167,14 +180,22 @@ a required process - if you already know what you want to build, go build it.
 You can add migrations, add tables, change the schema, pull in a library - all
 fair game. Just say so in `WriteUp.md`.
 
+**One gotcha if you touch the schema:** add a *new* migration file
+(`client/db/migrations/002_your_change.sql`) rather than editing
+`001_create_tables.sql`. The runner has no ledger and 001 is written with
+`CREATE TABLE IF NOT EXISTS`, so on a database that already has the tables an
+edit to 001 is silently skipped - and `npm run migrate` still reports success.
+`ALTER TABLE` in an 002 is the way. (Or wipe and rebuild:
+`docker compose down -v && ./setup.sh`.)
+
 ---
 
 ## Your write-up
 
-This goes in `WriteUp.md`, a file you add at the root of the repo. It carries
-real weight in how we evaluate you - for Part B it's often the difference
-between a good submission and a great one. Aim for **~300 words**, four
-questions:
+This goes in `WriteUp.md` at the root of the repo. **A skeleton is already
+there - fill it in.** It carries real weight in how we evaluate you; for Part B
+it's often the difference between a good submission and a great one. Aim for
+**~300 words**, four questions:
 
 1. **What did you build for Part B, and why that?** What made you pick it over
    everything else you could have built? This is the question we care most about.
@@ -200,6 +221,7 @@ every status code in it, including the error cases. `curl` is plenty:
 curl http://localhost:3000/api/restaurants          # 200 + JSON array
 curl http://localhost:3000/api/restaurants/1        # 200 + one restaurant
 curl -i http://localhost:3000/api/restaurants/99999 # 404
+curl -i http://localhost:3000/api/restaurants/abc   # 404, not 500 (A3)
 
 # Create - should return 201 with the created row
 curl -i -X POST http://localhost:3000/api/restaurants \
@@ -257,7 +279,7 @@ This is the part we're most interested in.
 
 1. Work on a branch and open a pull request against your fork (or push to a repo
    you share with us - whatever was arranged).
-2. Add a **`WriteUp.md`** at the root of the repo. Everything we need to read
+2. Fill in **`WriteUp.md`** at the root of the repo. Everything we need to read
    goes in that one file:
    - the write-up (see above),
    - the routes you built for Part B and their request/response shapes,

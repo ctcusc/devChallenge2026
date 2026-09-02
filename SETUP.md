@@ -14,6 +14,24 @@ PostgreSQL database in Docker. Two commands, a few minutes.
 script checks for both tools and tells you what's missing, so you don't have to
 verify versions by hand.
 
+### On Windows
+
+`setup.sh` is a shell script - it will not run in PowerShell or `cmd.exe`. Run
+every command in this repo from a **Unix-style shell**:
+
+- **WSL2** (recommended). Install it with `wsl --install` in an admin
+  PowerShell, then work inside the Linux home directory (`~/`), not
+  `/mnt/c/...` - Node is dramatically slower across the Windows filesystem
+  boundary. In Docker Desktop, turn on **Settings > General > Use the WSL 2
+  based engine**, and enable your distro under **Settings > Resources > WSL
+  integration** so `docker` works from inside WSL.
+- **Git Bash** also works, if you'd rather not set up WSL. Docker Desktop and
+  Node are then the Windows installs, and `./setup.sh` runs fine.
+
+Everything after that - `./setup.sh`, `npm run dev`, the `curl` commands in
+CHALLENGE.md - is identical to macOS and Linux. If Windows fights you here,
+tell us; that's useful feedback.
+
 ## Run it
 
 ```bash
@@ -40,9 +58,19 @@ curl http://localhost:3000/api/health
 # {"status":"ok"}
 ```
 
-The home page lists the seeded restaurants once the planted bug is fixed (see
-[CHALLENGE.md](./CHALLENGE.md)). Until then, `/api/restaurants` returns a 500 -
-that's expected, and it's your first task.
+### What you should see before you've fixed anything
+
+**http://localhost:3000 will show a Next.js error screen reading
+`restaurants.map is not a function`. That is expected - your setup is fine.**
+
+That's the planted bug in Part A1 surfacing. `/api/restaurants` returns a `500`,
+the home page gets an error object instead of an array, and calling `.map` on it
+throws. The error points at `app/page.tsx`, but the page is not where the bug
+is - the failing query is in the route handler. Fix A1 and the page renders the
+seeded restaurants.
+
+Anything else - `/api/health` not returning `{"status":"ok"}`, a connection
+error, a blank terminal - is a real setup problem. See Troubleshooting below.
 
 ## Expected URLs
 
@@ -75,7 +103,7 @@ Useful database commands:
 docker compose down       # stop the DB (your data is kept)
 docker compose down -v    # stop the DB and wipe all data (fresh start)
 docker compose logs db    # tail database logs
-docker compose ps         # check status - `db` should be "running (healthy)"
+docker compose ps         # check status - `db` should say "Up ... (healthy)"
 ```
 
 ## Configuration (you probably don't need this)
@@ -104,8 +132,8 @@ re-run `./setup.sh`.
 
 The app can't reach PostgreSQL.
 
-- Check the container: `docker compose ps` should show `db` as
-  `running (healthy)`. If not, `docker compose up -d` and check
+- Check the container: `docker compose ps` should show `db` with a status like
+  `Up 2 minutes (healthy)`. If not, `docker compose up -d` and check
   `docker compose logs db`.
 - If you set a custom `DATABASE_URL`, confirm its host and port match where
   Postgres is actually listening.
@@ -117,6 +145,23 @@ container can't bind it. Either stop the other one (e.g.
 `brew services stop postgresql@16`), or remap the container: change the `ports`
 line in `docker-compose.yml` to `"5433:5432"`, then create `client/.env` with a
 `DATABASE_URL` using port `5433`.
+
+### Docker: `container name ... is already in use`
+
+A container from another copy of this repo is still around - you cloned it
+twice, or renamed the folder. Docker won't start a second one with the same
+name.
+
+Remove the old container (the message names it) and re-run setup:
+
+```bash
+docker rm -f <container-name>
+./setup.sh
+```
+
+Note this is a *different* problem from the port conflict above, even though
+both stop the database from starting. Read the Docker error text to tell them
+apart: "port is already allocated" vs. "container name ... already in use".
 
 ### Port already in use (`EADDRINUSE` on 3000)
 
@@ -139,6 +184,17 @@ docker compose down -v
 
 The tables are already there. Migrations use `IF NOT EXISTS`, so this is safe to
 ignore. To start genuinely fresh, see "starting over" above.
+
+### My schema change didn't apply / `column ... does not exist`
+
+You probably edited `001_create_tables.sql`. That won't work on a database that
+already has the tables: the statements are `IF NOT EXISTS`, so Postgres skips
+them and `npm run migrate` still prints `Applied 1 migration(s).` as if it
+worked.
+
+Put schema changes in a **new** file - `002_your_change.sql` with an
+`ALTER TABLE` - and re-run `npm run migrate`. (Or, if you'd rather rewrite 001,
+wipe the database first: `docker compose down -v && ./setup.sh`.)
 
 ### Really can't run Docker?
 

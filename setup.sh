@@ -52,9 +52,18 @@ ok "docker $(docker --version | sed 's/Docker version //; s/,.*//')"
 step "Starting PostgreSQL (docker compose up -d)"
 
 if ! docker compose up -d; then
-  die "Could not start PostgreSQL. If port 5432 is already taken by another
-       Postgres, stop it (e.g. 'brew services stop postgresql@16') or remap the
-       port in docker-compose.yml. See SETUP.md > Troubleshooting."
+  die "Could not start PostgreSQL. Two things usually cause this - read the
+       Docker error printed just above to tell them apart:
+
+         'port is already allocated'  -> something else owns port 5432, often a
+             native Postgres. Stop it (e.g. 'brew services stop postgresql@16')
+             or remap the port in docker-compose.yml.
+
+         'container name ... already in use'  -> a container from another copy
+             of this repo is still around. Remove it with
+             'docker rm -f <name>' (the name is in the message above).
+
+       Both are covered in SETUP.md > Troubleshooting."
 fi
 
 printf '%s  waiting for the database to accept connections...%s\n' "$DIM" "$RESET"

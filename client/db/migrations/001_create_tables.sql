@@ -1,6 +1,14 @@
 -- Migration 001: create the core tables for Feeding Brennen.
 --
 -- Run with: npm run migrate
+--
+-- Read this file first - every field, type, and constraint you're working with
+-- is here.
+--
+-- Changing the schema? Add a NEW file (002_your_change.sql) rather than editing
+-- this one. These statements are `IF NOT EXISTS`, so on a database that already
+-- has the tables an edit here is silently skipped - and `npm run migrate` still
+-- reports success. See db/migrate.ts.
 
 CREATE TABLE IF NOT EXISTS restaurants (
   id         SERIAL PRIMARY KEY,

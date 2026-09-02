@@ -17,7 +17,10 @@
 services:
   db:
     image: postgres:16
-    container_name: feeding_brennen_db
+    # No `container_name:` on purpose. Compose namespaces the container by
+    # folder name, so a second clone (or a renamed folder) doesn't collide with
+    # a container left running by the first one. Address it by service name:
+    # `docker compose logs db`, `docker compose exec db psql -U postgres`.
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
