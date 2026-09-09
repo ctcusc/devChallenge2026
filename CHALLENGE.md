@@ -207,7 +207,6 @@ it's often the difference between a good submission and a great one. Aim for
 2. **What did you decide, and what did you rule out?** Route shapes, data model,
    where logic lives, what you deliberately didn't do.
 3. **Where did you cut corners?** What would you fix first with another day?
-4. **What should we look at first?**
 
 Write it like you're handing the work to a teammate. We'd rather read an honest
 "I ran out of time on X and here's what I'd do" than a polished list of
